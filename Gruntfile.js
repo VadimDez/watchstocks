@@ -231,7 +231,8 @@ module.exports = function (grunt) {
           '/es5-shim/',
           /font-awesome\.css/,
           /bootstrap\.css/,
-          /bootstrap-sass-official/
+          /bootstrap-sass-official/,
+          '/highcharts/'
         ]
       },
       client: {

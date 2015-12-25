@@ -1,16 +1,17 @@
 /**
  * Using Rails-like standard naming convention for endpoints.
- * GET     /api/things              ->  index
- * POST    /api/things              ->  create
- * GET     /api/things/:id          ->  show
- * PUT     /api/things/:id          ->  update
- * DELETE  /api/things/:id          ->  destroy
+ * GET     /api/stocks              ->  index
+ * POST    /api/stocks              ->  create
+ * GET     /api/stocks/:id          ->  show
+ * PUT     /api/stocks/:id          ->  update
+ * DELETE  /api/stocks/:id          ->  destroy
  */
 
 'use strict';
 
 import _ from 'lodash';
-var Thing = require('./thing.model');
+var Stock = require('./stock.model');
+var https = require('https');
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
@@ -59,43 +60,80 @@ function removeEntity(res) {
   };
 }
 
-// Gets a list of Things
+// Gets a list of Stocks
 export function index(req, res) {
-  Thing.findAsync()
+  Stock.findAsync()
     .then(responseWithResult(res))
     .catch(handleError(res));
 }
 
-// Gets a single Thing from the DB
+function getStockData(name) {
+  return new Promise((resolve, reject) => {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = now.getMonth() + 1;
+    var date = now.getDate();
+
+    https.get(`https://www.quandl.com/api/v3/datasets/WIKI/${name}.json?api_key=${process.env.QUANDL_API_KEY}&start_date=${year - 1}-${month}-${date}&end_date=${year}-${month}-${date}`, res => {
+      var data = '';
+      res.on('data', function (chunk) {
+        data += chunk;
+      });
+
+
+      res.on('end', function () {
+        data = JSON.parse(data);
+
+        if (!data || data.quandl_error) {
+          reject(data);
+        } else {
+          resolve(data);
+        }
+
+      });
+
+      res.resume();
+    }).on('error', e => {
+      reject(Error(e.message));
+    })
+  });
+}
+
+// Gets a single Stock from the DB
 export function show(req, res) {
-  Thing.findByIdAsync(req.params.id)
-    .then(handleEntityNotFound(res))
+  getStockData(req.params.id)
     .then(responseWithResult(res))
-    .catch(handleError(res));
+    .catch(handleError(res, 400));
+
+
+  //Stock.findByIdAsync(req.params.id)
+  //  .then(handleEntityNotFound(res))
+  //  .then(responseWithResult(res))
+  //  .catch(handleError(res));
 }
 
-// Creates a new Thing in the DB
+// Creates a new Stock in the DB
 export function create(req, res) {
-  Thing.createAsync(req.body)
+  Stock.createAsync(req.body)
     .then(responseWithResult(res, 201))
     .catch(handleError(res));
 }
 
-// Updates an existing Thing in the DB
+// Updates an existing Stock in the DB
 export function update(req, res) {
   if (req.body._id) {
     delete req.body._id;
   }
-  Thing.findByIdAsync(req.params.id)
+  Stock.findByIdAsync(req.params.id)
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(responseWithResult(res))
     .catch(handleError(res));
 }
 
-// Deletes a Thing from the DB
+// Deletes a Stock from the DB
 export function destroy(req, res) {
-  Thing.findByIdAsync(req.params.id)
+  Stock.findByIdAsync(req.params.id)
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));

@@ -6,7 +6,8 @@ angular.module('watchstocksApp', [
   'ngResource',
   'ngSanitize',
   'btford.socket-io',
-  'ui.router'
+  'ui.router',
+  'highcharts-ng'
 ])
   .config(function($urlRouterProvider, $locationProvider) {
     $urlRouterProvider
