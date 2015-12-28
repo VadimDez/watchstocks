@@ -114,9 +114,46 @@ export function show(req, res) {
 
 // Creates a new Stock in the DB
 export function create(req, res) {
-  Stock.createAsync(req.body)
-    .then(responseWithResult(res, 201))
-    .catch(handleError(res));
+
+  if (!req.body.name) {
+    res.status(400).end();
+    return;
+  }
+
+  https.get(`https://www.quandl.com/api/v3/datasets/WIKI/${req.body.name.toUpperCase()}/metadata.json`, (resp) => {
+    var data = '';
+
+    resp.on('data', (chunk) => {
+      data += chunk
+    });
+
+    resp.on('end', () => {
+      data = JSON.parse(data);
+
+      res
+        .status(resp.statusCode)
+        .end();
+
+      if (parseInt(resp.statusCode / 100) === 2) {
+        Stock.findAsync({code: data.dataset.dataset_code})
+          .then((stock) => {
+            if (stock.length) {
+              return;
+            }
+
+            Stock.createAsync({
+              name: data.dataset.name,
+              code: data.dataset.dataset_code
+            });
+          });
+      }
+    });
+  }).on('error', (err) => {
+    res
+      .status(400)
+      .json(err)
+      .end();
+  });
 }
 
 // Updates an existing Stock in the DB

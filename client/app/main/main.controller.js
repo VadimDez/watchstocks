@@ -20,14 +20,14 @@ class MainController {
       socket.syncUpdates('stock', this.stocks, (event, item) => {
 
         if (event === 'created') {
-          this.onCreated(item.name);
+          this.onCreated(item.code);
         } else if (event === 'deleted') {
-          this.onDeleted(item.name);
+          this.onDeleted(item.code);
         }
       });
 
       this.stocks.forEach(stock => {
-        this.getStock(stock.name);
+        this.getStock(stock.code);
       });
     });
 
@@ -42,18 +42,18 @@ class MainController {
 
   /**
    * On created socket callback
-   * @param name
+   * @param code
      */
-  onCreated(name) {
-    this.getStock(name);
+  onCreated(code) {
+    this.getStock(code);
   }
 
   /**
    * on deleted socket callback
-   * @param name
+   * @param code
      */
-  onDeleted(name) {
-    this.removeStock(name);
+  onDeleted(code) {
+    this.removeStock(code);
   }
 
   /**
@@ -93,17 +93,21 @@ class MainController {
 
         this.chartConfig.series.push(serie);
       })
-      .catch(error => {
-        if (typeof error === 'object' && error.quandl_error && error.quandl_error.code === 'QECx02') {
-          this.error_message = 'Incorrect or not existing stock code';
-        }
-      });
   }
 
+  /**
+   * Add stock
+   */
   addStock() {
     if (this.newStock) {
-      this.$http.post('/api/stocks', { name: this.newStock.toUpperCase() });
-      this.newStock = '';
+      this.stockService.create(this.newStock.toUpperCase())
+        .then(() => {
+          this.error_message = '';
+          this.newStock = '';
+        })
+        .catch(error => {
+          this.error_message = 'Incorrect or not existing stock code';
+        });
     }
   }
 
@@ -112,7 +116,7 @@ class MainController {
    * @param stock
      */
   deleteStock(stock) {
-    this.$http.delete('/api/stocks/' + stock._id);
+    this.stockService.remove(stock);
   }
 
   /**
