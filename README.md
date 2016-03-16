@@ -19,3 +19,14 @@ then run
 ```
 grunt serve
 ```
+
+## Uses
+
+- NodeJS
+- Socket.io
+- AngularJS
+- Highcharts
+- SCSS
+- Karma
+- Protractor
+- Yeoman
