@@ -1,6 +1,8 @@
 # watchstocks
 
-[Demo](http://watchstocks.herokuapp.com/)
+Track stocks
+
+#### [Demo](http://watchstocks.herokuapp.com/)
 
 ## Run
 
